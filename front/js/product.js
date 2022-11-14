@@ -32,9 +32,65 @@ function createProductFiche(productDetails) {
     let description = document.getElementById('description');
     description.textContent = productDetails.description;
 
+    let colorSelect = document.getElementById('colors');
 
+    for (let i = 0; i < productDetails.colors.length; i++) {
+        let colorOption = document.createElement('option');
+        colorOption.setAttribute('value', productDetails.colors[i]);
+        colorOption.textContent = productDetails.colors[i];
+        colorSelect.append(colorOption);
+
+    }
 }
 
+function addProductToCart(itemId, color, quantity) {
+    quantity = Number(quantity);
+    let detailProductToCart = new Object();
+    let productColor = new Object();
+    if (localStorage.getItem('cart') === null) {
+        productColor[color] = quantity;
+        detailProductToCart[itemId] = productColor;
+        localStorage.setItem('cart', JSON.stringify(detailProductToCart));
+    } else {
+        let actualCart = JSON.parse(localStorage.getItem('cart'));
+        if (actualCart[itemId]) {
+            if (actualCart[itemId][color]) {
+                actualCart[itemId][color] = actualCart[itemId][color] + quantity;
+                localStorage.setItem('cart', JSON.stringify(actualCart));
+            }
+            else{
+                actualCart[itemId][color] = quantity;
+                localStorage.setItem('cart', JSON.stringify(actualCart));
+            }
+
+        } else {
+            let actualCart = JSON.parse(localStorage.getItem('cart'));
+            productColor[color] = quantity;
+            actualCart[itemId] = productColor;
+            localStorage.setItem('cart', JSON.stringify(actualCart));
+        }
+
+    }
+
+
+}
 let productId = getUrlParam();
 let productDetails = getProductDetails(productId);
-console.log(productDetails);
+
+let confirmButton = document.getElementById('addToCart');
+confirmButton.addEventListener('click', () => {
+    let colorSelect = document.getElementById('colors');
+    let color = colorSelect.options[colorSelect.selectedIndex].value;
+    let inputQuantity = document.getElementById('quantity');
+    let quantity = inputQuantity.value;
+
+    if (quantity <= 0) {
+        alert('Veuillez sélectionner une quantité');
+    } else if (color == "") {
+        alert('Veuillez sélectionner une couleur');
+    } else {
+        addProductToCart(productId, color, quantity);
+    }
+
+
+})
