@@ -1,7 +1,6 @@
 function getUrlParam() {
     let params = new URLSearchParams(window.location.search);
-    let productId = params.get('_id');
-    return productId;
+    return params.get('_id');
 }
 
 function getProductDetails(productId) {
