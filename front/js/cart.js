@@ -1,3 +1,38 @@
+
+function showCart() {
+    const cart = JSON.parse(localStorage.getItem('cart'))
+    let totalPriceSpan = document.getElementById('totalPrice');;
+    for (let productId in cart) {
+        let url = 'http://localhost:3000/api/products/' + productId;
+
+        fetch(url)
+            .then(res => res.json())
+            .then(productDetail => {
+                let productName = productDetail.name;
+                let productImgUrl = productDetail.imageUrl;
+                let productPrice = productDetail.price;
+                for (let color in cart[productId]) {
+                    let productColor = color
+                    let quantity = cart[productId][color];
+                    createCartFiche(productId, productName, productImgUrl, productPrice, productColor, quantity);
+
+                    let totalQuantity = document.getElementById('totalQuantity');
+                    totalQuantity.textContent = Number(totalQuantity.textContent) + quantity;
+                   let totalPrice = productPrice * quantity;
+                   let actualTotal = Number(totalPriceSpan.textContent);
+                   actualTotal += totalPrice;
+                   totalPriceSpan.innerText = String(actualTotal);
+                }
+            })
+            .catch(function (e) {
+                console.log(e);
+            })
+
+
+    }
+
+
+}
 function createCartFiche(productId, name, imgUrl, price, color, quantity) {
     let article = document.createElement('article');
     article.classList.add('cart__item');
@@ -74,30 +109,13 @@ function createCartFiche(productId, name, imgUrl, price, color, quantity) {
 
     itemContentSettings.append(itemContentSettingsDelete);
     itemContentSettingsDelete.append(deleteBtn);
-
 }
-
-function showCart() {
-    const cart = JSON.parse(localStorage.getItem('cart'));
-    console.log(cart);
-    for (let productId in cart) {
-        let url = 'http://localhost:3000/api/products/' + productId;
-        fetch(url)
-            .then(res => res.json())
-            .then(productDetail => {
-                let productName = productDetail.name;
-                let productImgUrl = productDetail.imageUrl;
-                let productPrice = productDetail.price;
-                for (let color in cart[productId]) {
-                    let productColor = color
-                    let quantity = cart[productId][color];
-                    createCartFiche(productId, productName, productImgUrl, productPrice, productColor, quantity);
-                }
-            })
-            .catch(function (e) {
-                console.log(e);
-            })
+/*function totalPriceCart(){
+    let totalPrice;
+    const quantities = document.getElementsByClassName('itemQuantity');
+    console.log(quantities)
+    for (let i = 0; i < quantities.length; i++) {
+        console.log(i)
     }
-}
-
+}*/
 showCart();
