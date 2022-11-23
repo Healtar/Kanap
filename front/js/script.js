@@ -1,39 +1,73 @@
-function createProductLink(product){
-    let items = document.getElementById('items');
-    let linkCard = document.createElement("a");
-    linkCard.setAttribute("href", './product.html?_id='+product._id);
+const url = 'http://localhost:3000/api/products';
+
+init();
+
+
+/**
+ *Init the app
+ *Get products and create nodes for each product
+ *
+ */
+async function init()
+{
+    const products = await getProducts();
+    console.log(products)
+    products.forEach(product => createProductLink(product));
+}
+
+/**
+ *Create products link cards
+ *
+ *@returns {void}
+ * */
+function createProductLink(product)
+{
+
+    let title = document.createElement('h3');
+        title.classList.add('productName');
+        title.textContent = product.name;
+
+    let image = document.createElement('img');
+        image.setAttribute('src', product.imageUrl);
+        image.setAttribute('alt', product.altTxt);
+
+    let description = document.createElement('p');
+        description.classList.add('description');
+        description.textContent = product.description;
 
     let article = document.createElement('article');
-    let productImage = document.createElement('img');
-    productImage.setAttribute('src', product.imageUrl);
-    productImage.setAttribute('alt', product.altTxt);
+        article.appendChild(title);
+        article.appendChild(image);
+        article.appendChild(description);
 
-    let productTitle = document.createElement('h3');
-    productTitle.classList.add('productName')
-    productTitle.textContent = product.name;
-    let productDescription = document.createElement('p');
-    productDescription.classList.add('productDescription');
-    productDescription.textContent = product.description;
-    linkCard.appendChild(article);
-    article.appendChild(productImage)
-    article.appendChild(productTitle)
-    article.appendChild(productDescription)
+    let link = document.createElement("a");
+        link.setAttribute("href", `./product.html?id=${product._id}`);
+        link.appendChild(article);
 
-    items.appendChild(linkCard);
-}
-function getProducts(){
-
-    fetch('http://localhost:3000/api/products')
-        .then(res => res.json())
-        .then(products => {
-            for (let i = 0; i < products.length; i++)
-            {
-                createProductLink(products[i]);
-            }
-        })
-        .catch(function (e){
-            console.log(e);
-        })
+    let items = document.getElementById('items');
+        items.appendChild(link);
 }
 
-getProducts();
+/**
+ *Get products from API
+ *
+ *@returns {array} of products
+ */
+async function getProducts()
+{
+
+    try {
+
+        const response = await fetch(url);
+        const products = await response.json();
+
+        return products;
+    }
+    catch (e){
+        console.warn(`${e.message}: ${url}`);
+
+        return [];
+    }
+}
+
+
