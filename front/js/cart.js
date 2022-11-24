@@ -157,18 +157,33 @@ async function totalCommand()
           totalPrice.innerText = price;
 }
 
-async function updateCart(input)
+async function updateCart()
 {
-    const item = input.target
-    const article = item.closest('.cart__item');
+    console.log('update')
+    const cartItems = document.querySelectorAll('.cart__item');
+    console.log(cartItems)
+    cartItems.forEach((item) =>{
+        console.log(item);
 
-    console.log(article.getElementsByTagName('article'))
-    console.log(article)
+        let color = new Object();
+        let detailProductToCart = new Object();
+        const productId = item.dataset('id');
+        const productColor = item.dataset('color');
+        const inputQuantity = item.querySelector('.itemQuantity');
+        const productQuantity = inputQuantity.value;
+        color[productColor] = productQuantity;
+        detailProductToCart[productId] = color;
+        cart[productId] = productColor;
+    })
+
+    localStorage.setItem('cart', JSON.stringify(cart));
 }
 
 async function removeItem(btn)
 {
     btn.closest('.cart__item').remove();
+    await totalCommand();
+    await updateCart();
 }
 
 async function init()
