@@ -59,9 +59,8 @@ async function getProducts()
     try {
 
         const response = await fetch(url);
-        const products = await response.json();
+        return await response.json();
 
-        return products;
     }
     catch (e){
         console.warn(`${e.message}: ${url}`);

@@ -128,6 +128,7 @@ async function getProductDetails(id)
     catch (e)
     {
         console.warn(`${e.message}: ${url}`)
+        return [];
     }
 }
 
@@ -157,33 +158,32 @@ async function totalCommand()
           totalPrice.innerText = price;
 }
 
-async function updateCart()
+async function updateCart(productId, productColor, quantity)
 {
-    console.log('update')
-    const cartItems = document.querySelectorAll('.cart__item');
-    console.log(cartItems)
-    cartItems.forEach((item) =>{
-        console.log(item);
-
-        let color = new Object();
-        let detailProductToCart = new Object();
-        const productId = item.dataset('id');
-        const productColor = item.dataset('color');
-        const inputQuantity = item.querySelector('.itemQuantity');
-        const productQuantity = inputQuantity.value;
-        color[productColor] = productQuantity;
-        detailProductToCart[productId] = color;
-        cart[productId] = productColor;
-    })
+    if (quantity === 0)
+    {
+        delete cart[productId][productColor];
+        if (Object.keys(cart[productId]).length === 0)
+        {
+            delete cart[productId];
+        }
+    }else
+    {
+        cart[productId][productColor] = quantity;
+    }
+    console.log(cart)
 
     localStorage.setItem('cart', JSON.stringify(cart));
 }
 
 async function removeItem(btn)
 {
+    const productId = btn.closest('.cart__item').dataset.id;
+    const productColor = btn.closest('.cart__item').dataset.color;
     btn.closest('.cart__item').remove();
+
+    await updateCart(productId, productColor, 0);
     await totalCommand();
-    await updateCart();
 }
 
 async function init()
@@ -199,11 +199,167 @@ async function init()
           })
 
     const quantityInput = document.querySelectorAll('.itemQuantity');
-    /*quantityInput.forEach((input)=>{
+    quantityInput.forEach((input)=>{
 
         input.addEventListener("change", (event)=>{
-            updateCart(event)
+
+            const productId = event.target.closest('.cart__item').dataset.id;
+            const productColor = event.target.closest('.cart__item').dataset.color;
+            const quantity = Number(event.target.value);
+
+            updateCart(productId, productColor, quantity);
+            totalCommand();
         })
-    })*/
+    })
+
+    const form = document.querySelector('form.cart__order__form');
+          form.addEventListener('submit', (e) =>{
+              e.preventDefault();
+              let contact = formValidity(e)
+              if (contact)
+              {
+                const command = generateCommandNumber(contact);
+                  console.log(command.orderId)
+              }
+        })
 }
 
+function formValidity()
+{
+    let contact = new Object();
+
+    const firstname = document.getElementById('firstName');
+    const firstNameError = document.getElementById('firstNameErrorMsg');
+    if (nameValidity(firstname.value) !== true)
+    {
+        firstNameError.innerText = 'Prénom invalide';
+        return false;
+    }
+    else
+    {
+        firstNameError.innerText = '';
+        contact['firstName'] = firstname.value;
+    }
+
+    const lastname = document.getElementById('lastName');
+    const lastNameError = document.getElementById('lastNameErrorMsg');
+    if (nameValidity(lastname.value) !== true)
+    {
+        lastNameError.innerText = 'Nom invalide';
+        return false;
+    }
+    else
+    {
+        lastNameError.innerText = '';
+        contact['lastName'] = lastname.value;
+    }
+
+    const address = document.getElementById('address');
+    const addressError = document.getElementById('addressErrorMsg');
+    if (addressValidity(address.value) !== true)
+    {
+        addressError.innerText = 'Adresse invalide';
+        return false;
+    }
+    else
+    {
+        addressError.innerText = '';
+        contact['address'] = address.value;
+    }
+
+    const city = document.getElementById('city');
+    const cityError = document.getElementById('cityErrorMsg');
+    if (addressValidity(city.value) !== true)
+    {
+        cityError.innerText = 'Nom de ville invalide';
+        return false;
+    }
+    else
+    {
+        cityError.innerText = '';
+        contact['city'] = city.value;
+    }
+
+    const mail = document.getElementById('email');
+    const mailError = document.getElementById('emailErrorMsg');
+    if (mailValidity(mail.value) !== true)
+    {
+        mailError.innerText = 'Adresse mail invalide';
+        return false;
+    }
+    else
+    {
+        mailError.innerText = '';
+        contact['email'] = mail.value;
+    }
+
+    return contact;
+}
+
+/**
+ * Vérifie la validité d'un nom ou d'un prénom
+ *
+ * @returns {boolean}
+ * */
+function nameValidity(name)
+{
+    const regex = /^[a-zA-ZáàâäãåçéèêëíìîïñóòôöõúùûüýÿæœÁÀÂÄÃÅÇÉÈÊËÍÌÎÏÑÓÒÔÖÕÚÙÛÜÝŸÆŒ\-]+$/;
+
+    if (name.match(regex))
+    {
+        return true;
+    }
+
+}
+
+/**
+ * Vérifie la validité d'une adresse ou d'une ville
+ *
+ * @returns {boolean}
+ * */
+function addressValidity(address)
+{
+    const regex = /^[a-zA-Z0-9áàâäãåçéèêëíìîïñóòôöõúùûüýÿæœÁÀÂÄÃÅÇÉÈÊËÍÌÎÏÑÓÒÔÖÕÚÙÛÜÝŸÆŒ'. \-²°]+$/;
+
+    if (address.match(regex))
+    {
+        return true;
+    }
+}
+
+/**
+ * Vérifie la validité d'une adresse mail
+ *
+ * @returns {boolean}
+ * */
+function mailValidity(mail)
+{
+    const regex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+
+    if (mail.match(regex))
+    {
+        return true;
+    }
+}
+
+async function generateCommandNumber(contact)
+{
+    let products = new Array();
+
+    for (const product in cart)
+    {
+        products.push(product);
+    }
+
+    const response = await fetch(url + 'order', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json;charset=utf-8'
+        },
+        body: JSON.stringify({contact, products})
+    }) .then((result) => result.json())
+        .then((order) => {
+            window.location.href = "./confirmation.html?id=" + order.orderId;
+        })
+
+}
