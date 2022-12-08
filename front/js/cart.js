@@ -1,20 +1,62 @@
 const url = 'http://localhost:3000/api/products/';
-let cart = JSON.parse(localStorage.getItem('cart'))
-init()
+let cart;
 
+/**
+ * Initialise
+ * */
+(async function()
+{
+    cart = JSON.parse(localStorage.getItem('cart'));
+
+    await showCart(cart);
+    await totalCommand();
+
+    const btnDelete = document.querySelectorAll('.deleteItem');
+    btnDelete.forEach((btn)=>{
+        btn.addEventListener('click', (e)=> {
+            removeItem(e.target);
+        })
+    })
+
+    const quantityInput = document.querySelectorAll('.itemQuantity');
+    quantityInput.forEach((input)=>{
+
+        input.addEventListener("change", (event)=>{
+
+            const productId = event.target.closest('.cart__item').dataset.id;
+            const productColor = event.target.closest('.cart__item').dataset.color;
+            const quantity = Number(event.target.value);
+
+            updateCart(productId, productColor, quantity);
+            totalCommand();
+        })
+    })
+
+    const form = document.querySelector('form.cart__order__form');
+    form.addEventListener('submit', (e) =>{
+        e.preventDefault();
+        let contact = formValidity(e)
+        if (contact)
+        {
+            const command = generateCommandNumber(contact);
+            console.log(command.orderId)
+        }
+    })
+}());
+
+/**
+ * Affiche le contenu du panier (localstorage)
+ * */
 async function showCart(cart)
 {
     for (let productId in cart) {
 
        const productDetails = await getProductDetails(productId);
-       const productName = productDetails.name;
-       const productImgUrl = productDetails.imageUrl;
-       const productPrice = productDetails.price;
 
                 for (let color in cart[productId]) {
-                    let productColor = color
-                    let quantity = cart[productId][color];
-                    await createCartFiche(productId, productName, productImgUrl, productPrice, productColor, quantity);
+                    productDetails.color = color;
+                    productDetails.quantity = cart[productId][color];
+                    await createCartFiche(productDetails);
                 }
     }
 }
@@ -24,7 +66,7 @@ async function showCart(cart)
  *
  * @returns {void}
  * */
-async function createCartFiche(productId, productName, productImgUrl, productPrice, productColor, quantity)
+async function createCartFiche(product)
 {
 
 //  <itemContent>
@@ -32,13 +74,13 @@ async function createCartFiche(productId, productName, productImgUrl, productPri
     //  <description>
 
     let itemTitle = document.createElement('h2');
-        itemTitle.textContent = productName;
+        itemTitle.textContent = product.name;
 
     let itemColor = document.createElement('p');
-        itemColor.textContent = productColor;
+        itemColor.textContent = product.color;
 
     let itemPrice = document.createElement('p');
-        itemPrice.textContent = productPrice + " €";
+        itemPrice.textContent = product.price + " €";
 
     let itemContentDescription = document.createElement('div');
         itemContentDescription.classList.add('cart__item__content__description');
@@ -64,7 +106,7 @@ async function createCartFiche(productId, productName, productImgUrl, productPri
         itemQuantityInput.setAttribute('name', 'itemQuantity');
         itemQuantityInput.setAttribute('min', '1');
         itemQuantityInput.setAttribute('max', '100');
-        itemQuantityInput.value = quantity;
+        itemQuantityInput.value = product.quantity;
 
     let itemQuantity = document.createElement('p');
         itemQuantity.textContent = 'Qté : ';
@@ -91,7 +133,7 @@ async function createCartFiche(productId, productName, productImgUrl, productPri
 //  <itemImg>
 
     let itemImg = document.createElement('img');
-        itemImg.setAttribute('src', productImgUrl);
+        itemImg.setAttribute('src', product.imageUrl);
         itemImg.setAttribute('alt', 'Photographie d\'un canapé');
 
     let divItemImg = document.createElement('div');
@@ -103,8 +145,8 @@ async function createCartFiche(productId, productName, productImgUrl, productPri
 
     let article = document.createElement('article');
         article.classList.add('cart__item');
-        article.dataset.id = productId;
-        article.dataset.color = productColor;
+        article.dataset.id = product._id;
+        article.dataset.color = product.color;
         article.append(divItemImg);
         article.append(itemContent);
 
@@ -132,6 +174,9 @@ async function getProductDetails(id)
     }
 }
 
+/**
+ * Calcul et affiche le total du prix et la quantité des produits
+ * */
 async function totalCommand()
 {
     let quantity = 0;
@@ -158,6 +203,9 @@ async function totalCommand()
           totalPrice.innerText = price;
 }
 
+/**
+ * Met à jour le localstorage
+ * */
 async function updateCart(productId, productColor, quantity)
 {
     if (quantity === 0)
@@ -176,6 +224,9 @@ async function updateCart(productId, productColor, quantity)
     localStorage.setItem('cart', JSON.stringify(cart));
 }
 
+/**
+ * On click remove node of article
+ * */
 async function removeItem(btn)
 {
     const productId = btn.closest('.cart__item').dataset.id;
@@ -186,44 +237,9 @@ async function removeItem(btn)
     await totalCommand();
 }
 
-async function init()
-{
-    await showCart(cart);
-    await totalCommand();
-
-    const btnDelete = document.querySelectorAll('.deleteItem');
-          btnDelete.forEach((btn)=>{
-                btn.addEventListener('click', (e)=> {
-                    removeItem(e.target);
-                })
-          })
-
-    const quantityInput = document.querySelectorAll('.itemQuantity');
-    quantityInput.forEach((input)=>{
-
-        input.addEventListener("change", (event)=>{
-
-            const productId = event.target.closest('.cart__item').dataset.id;
-            const productColor = event.target.closest('.cart__item').dataset.color;
-            const quantity = Number(event.target.value);
-
-            updateCart(productId, productColor, quantity);
-            totalCommand();
-        })
-    })
-
-    const form = document.querySelector('form.cart__order__form');
-          form.addEventListener('submit', (e) =>{
-              e.preventDefault();
-              let contact = formValidity(e)
-              if (contact)
-              {
-                const command = generateCommandNumber(contact);
-                  console.log(command.orderId)
-              }
-        })
-}
-
+/**
+ * Vérifie la validité du formulaire
+ * */
 function formValidity()
 {
     let contact = new Object();

@@ -1,7 +1,50 @@
 
 const url = 'http://localhost:3000/api/products/';
 
-init()
+
+/**
+ * Get product details and create node
+ * */
+(async function()
+{
+    const productId =  getUrlParam();
+    const productDetails = await getProductDetails(productId);
+
+    createProductFiche(productDetails);
+
+    let confirmButton = document.getElementById('addToCart');
+
+    let addedProductMsg = document.createElement("p");
+    let article = document.getElementsByTagName('article');
+        article[0].append(addedProductMsg)
+
+    confirmButton.addEventListener('click', () => {
+        let colorSelect = document.getElementById('colors');
+        let color = colorSelect.options[colorSelect.selectedIndex].value;
+        let inputQuantity = document.getElementById('quantity');
+        let quantity = inputQuantity.value;
+
+        if (color === "") {
+            alert('Veuillez sélectionner une couleur');
+        } else if (quantity <= 0) {
+            alert('Veuillez sélectionner une quantité');
+        } else {
+            addProductToCart(productId, color, quantity);
+
+           if (quantity > 1)
+           {
+               addedProductMsg.innerText = `${quantity} articles ajoutés`;
+           }
+           else
+           {
+               addedProductMsg.innerText = `${quantity} article ajouté`;
+           }
+
+
+
+        }
+    })
+}());
 
 /**
 * Récupère l'id du produit dans l'URL
@@ -104,31 +147,6 @@ function addProductToCart(itemId, color, quantity)
 
 }
 
-/**
- * Get product details and create node
- * */
-async function init()
-{
-    const productId =  getUrlParam();
-    const productDetails = await getProductDetails(productId);
 
-    createProductFiche(productDetails);
-
-    let confirmButton = document.getElementById('addToCart');
-        confirmButton.addEventListener('click', () => {
-    let colorSelect = document.getElementById('colors');
-    let color = colorSelect.options[colorSelect.selectedIndex].value;
-    let inputQuantity = document.getElementById('quantity');
-    let quantity = inputQuantity.value;
-
-        if (color === "") {
-            alert('Veuillez sélectionner une couleur');
-        } else if (quantity <= 0) {
-            alert('Veuillez sélectionner une quantité');
-        } else {
-            addProductToCart(productId, color, quantity);
-        }
-    })
-}
 
 

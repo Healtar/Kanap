@@ -1,5 +1,8 @@
-init();
-
+(function()
+{
+    const orderId = getUrlParam()
+    showNumCommand(orderId)
+}());
 function getUrlParam()
 {
     let params = new URLSearchParams(window.location.search);
@@ -12,8 +15,3 @@ function showNumCommand(orderId)
           spanOrderId.innerText = orderId;
 }
 
-function init()
-{
-    const orderId = getUrlParam()
-    showNumCommand(orderId)
-}

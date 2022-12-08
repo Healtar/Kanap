@@ -1,19 +1,16 @@
 const url = 'http://localhost:3000/api/products';
 
-init();
-
 
 /**
  *Init the app
  *Get products and create nodes for each product
  *
  */
-async function init()
+(async function()
 {
     const products = await getProducts();
-    console.log(products)
     products.forEach(product => createProductLink(product));
-}
+}());
 
 /**
  *Create products link cards
